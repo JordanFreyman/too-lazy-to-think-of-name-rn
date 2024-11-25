@@ -1,0 +1,36 @@
+{
+    "Main Dish": [
+      {
+        "name": "Steak",
+        "price": 14.99,
+        "description": "Oh boy!!! A big ol' juicy MMMM!!!"
+      },
+      {
+        "name": "Spaghetti",
+        "price": 5.99,
+        "description": "A classic Italian pasta dish with tomato sauce and meatballs."
+      }
+    ],
+    "Side Dish": [
+      {
+        "name": "Garlic Bread",
+        "price": 2.99,
+        "description": "Crispy bread topped with garlic butter and herbs."
+      }
+    ],
+    "Dessert": [
+      {
+        "name": "Chocolate Cake",
+        "price": 3.99,
+        "description": "Rich and moist chocolate cake with creamy frosting."
+      }
+    ],
+    "Beverage": [
+      {
+        "name": "Orange Juice",
+        "price": 1.99,
+        "description": "Freshly squeezed orange juice with no added sugars."
+      }
+    ]
+  }
+  

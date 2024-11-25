@@ -1,12 +1,16 @@
 import sqlite3
 from islander import Islander
 from util import save_game_to_db, load_game_from_db
+from food import buy_food
+
 class Island:
     def __init__(self, db_name="island_game.db"):
         self.db_name = db_name
         self.islanders = []
         self.saved = False
         self.name = ""
+        self.money = 0.0
+        self.unlocked_food = []
         self._initialize_db()
         self.locations = ["Apartments", "Town Hall", "Fountain", "Food Mart", "Clothing Shop", "Hat Shop", "Interior Shop", "Compatibility Tester", "Beach", "Tower",
                           "Rankings Board", "Mii News", "Concert Hall", "Pawn Shop", "Photo Studio", "Amusement Park", "Park", "Cafe", "Homes"]
@@ -77,12 +81,12 @@ class Island:
 
     def map(self, save_file):
         """Main menu for interacting with the island."""
-
         print("Where would you like to go?\n")
         for idx, location in enumerate(self.unlocked_locations, start=1):
             print(f"{idx}) {location}")
-        print(f"{len(self.unlocked_locations)+1}) Save game\n"
-              f"{len(self.unlocked_locations)+2}) Exit game")
+        print(f"{len(self.unlocked_locations) + 1}) Save game\n"
+            f"{len(self.unlocked_locations) + 2}) Exit game")
+        
         try:
             choice = int(input("\nChoose a number: "))
             if 1 <= choice <= len(self.unlocked_locations):
@@ -90,17 +94,16 @@ class Island:
                 if selected_location == "Apartments":
                     self.apts()
                 elif selected_location == "Food Mart":
-                    self.food_mart()
+                    self.food_mart()  # Should call the food_mart method
                 elif selected_location == "Town Hall":
                     self.town_hall()
                 elif selected_location == "Beach":
                     self.beach()
                 elif selected_location == "Fountain":
                     self.fountain()
-                
-            elif choice == len(self.unlocked_locations) + 1:    #save game
+            elif choice == len(self.unlocked_locations) + 1:  # Save game
                 self.save_game(save_file)
-            elif choice == len(self.unlocked_locations) + 2:    #exit game
+            elif choice == len(self.unlocked_locations) + 2:  # Exit game
                 if not self.saved:
                     sureSaved = input("You have not saved the game. Are you sure you would like to quit? (Y/N)\n").lower()
                     if sureSaved == "y":
@@ -113,11 +116,11 @@ class Island:
                 else:
                     print("Goodbye!")
                     exit()
-
             else:
                 print("Invalid choice. Please select a valid number.")
         except ValueError:
             print("Invalid input. Please enter a number.")
+
 
     def apts(self):
         """Visit an apartment of an islander."""
@@ -144,6 +147,7 @@ class Island:
 
     def food_mart(self):
         print("Hey there hungry boy")
+        buy_food()
     
     def town_hall(self):
         print("Business business business")
