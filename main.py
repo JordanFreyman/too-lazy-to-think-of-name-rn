@@ -1,4 +1,3 @@
-import json
 import sqlite3
 
 class Islander:
@@ -52,34 +51,48 @@ class Island:
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
 
-        # Create the island table if it doesn't exist
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS island (
-            id INTEGER PRIMARY KEY,
-            name TEXT
-        )''')
-
-        # Save the island's name if not already saved
-        cursor.execute('''
-        INSERT OR REPLACE INTO island (id, name) VALUES (1, ?)
-        ''', (self.name,))  # Insert or replace the island name in the table (id = 1 is just a placeholder)
-        
         # Save islander's main details
         for islander in self.islanders:
-            cursor.execute('''
-            INSERT INTO islanders (name, gender, age, height)
-            VALUES (?, ?, ?, ?)''', (islander.name, islander.gender, islander.age, islander.height))
+            # Check if the islander already exists by name (you could also use a unique ID)
+            cursor.execute('SELECT id FROM islanders WHERE name = ?', (islander.name,))
+            existing_islander = cursor.fetchone()
 
-            # Save the islander's appearance details
-            cursor.execute('''
-            INSERT INTO appearance (islander_id, hair, eyes, voice)
-            VALUES ((SELECT id FROM islanders WHERE name = ?), ?, ?, ?)''', 
-            (islander.name, islander.hair, islander.eyes, islander.voice))
+            if existing_islander:
+                # If the islander exists, update the existing record
+                islander_id = existing_islander[0]
+                cursor.execute('''
+                UPDATE islanders 
+                SET gender = ?, age = ?, height = ?
+                WHERE id = ?
+                ''', (islander.gender, islander.age, islander.height, islander_id))
+
+                # Update appearance details (if any)
+                cursor.execute('''
+                UPDATE appearance
+                SET hair = ?, eyes = ?, voice = ?
+                WHERE islander_id = ?
+                ''', (islander.hair, islander.eyes, islander.voice, islander_id))
+            else:
+                # If the islander doesn't exist, insert a new record
+                cursor.execute('''
+                INSERT INTO islanders (name, gender, age, height)
+                VALUES (?, ?, ?, ?)
+                ''', (islander.name, islander.gender, islander.age, islander.height))
+
+                # Get the last inserted islander's ID (for reference in the appearance table)
+                islander_id = cursor.lastrowid
+
+                # Save the islander's appearance details
+                cursor.execute('''
+                INSERT INTO appearance (islander_id, hair, eyes, voice)
+                VALUES (?, ?, ?, ?)
+                ''', (islander_id, islander.hair, islander.eyes, islander.voice))
 
         conn.commit()
         conn.close()
         print("Game saved.")
         self.saved = True
+
 
 
     def load_game(self, save_file):
@@ -117,8 +130,6 @@ class Island:
             rows = cursor.fetchall()
 
             for row in rows:
-                # Assuming row[1] is name, row[2] is gender, row[3] is age, row[4] is height
-                # (adjust the indices based on your schema if needed)
                 if len(row) >= 5:  # Ensure there are enough columns
                     name, gender, age, height = row[1], row[2], row[3], row[4]
                     islander = Islander(name, row, gender, age, height)
