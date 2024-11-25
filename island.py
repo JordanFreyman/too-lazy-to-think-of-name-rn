@@ -81,12 +81,12 @@ class Island:
 
     def map(self, save_file):
         """Main menu for interacting with the island."""
+
         print("Where would you like to go?\n")
         for idx, location in enumerate(self.unlocked_locations, start=1):
             print(f"{idx}) {location}")
-        print(f"{len(self.unlocked_locations) + 1}) Save game\n"
-            f"{len(self.unlocked_locations) + 2}) Exit game")
-        
+        print(f"{len(self.unlocked_locations)+1}) Save game\n"
+              f"{len(self.unlocked_locations)+2}) Exit game")
         try:
             choice = int(input("\nChoose a number: "))
             if 1 <= choice <= len(self.unlocked_locations):
@@ -94,16 +94,17 @@ class Island:
                 if selected_location == "Apartments":
                     self.apts()
                 elif selected_location == "Food Mart":
-                    self.food_mart()  # Should call the food_mart method
+                    self.food_mart()
                 elif selected_location == "Town Hall":
                     self.town_hall()
                 elif selected_location == "Beach":
                     self.beach()
                 elif selected_location == "Fountain":
                     self.fountain()
-            elif choice == len(self.unlocked_locations) + 1:  # Save game
+                
+            elif choice == len(self.unlocked_locations) + 1:    #save game
                 self.save_game(save_file)
-            elif choice == len(self.unlocked_locations) + 2:  # Exit game
+            elif choice == len(self.unlocked_locations) + 2:    #exit game
                 if not self.saved:
                     sureSaved = input("You have not saved the game. Are you sure you would like to quit? (Y/N)\n").lower()
                     if sureSaved == "y":
@@ -116,11 +117,11 @@ class Island:
                 else:
                     print("Goodbye!")
                     exit()
+
             else:
                 print("Invalid choice. Please select a valid number.")
         except ValueError:
             print("Invalid input. Please enter a number.")
-
 
     def apts(self):
         """Visit an apartment of an islander."""
@@ -151,6 +152,19 @@ class Island:
     
     def town_hall(self):
         print("Business business business")
+        print(f"Welcome to the Town Hall of {self.name}!\n"
+              "1) New Islander\n2) Resident List\n3) Collection\n4) Settings")
+        choice = int(input("Make a selection: "))
+        if choice == 1:
+            self.islander_maker()
+        elif choice == 2:
+            for i in self.islanders:
+                print(f"{i.name} - {i.gender}\nAge {i.age}\t{i.height} inches tall")
+        elif choice == 3:
+            print("wip")
+        elif choice == 4:
+            print("wip")
+            #settings page includes clock settings, change island name, and delete save data.
 
     def beach(self):
         print("she sure is purdy sheldon")
