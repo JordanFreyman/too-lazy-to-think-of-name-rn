@@ -58,7 +58,7 @@ class Island:
         print("What would you like to name your island?\n(Will appear as '_______ Island.')\n")
         name = input("Enter name: ")
         self.name = name
-        print(f"Good choice. Welcome to {self.name} Island! Let's get started by making your first resident.")
+        print(f"Good choice, handsome/gorgeous/mom. Welcome to {self.name} Island! Let's get started by making your first resident.")
         self.islander_maker()
 
     def islander_maker(self):
@@ -89,6 +89,14 @@ class Island:
                 selected_location = self.unlocked_locations[choice - 1]
                 if selected_location == "Apartments":
                     self.apts()
+                elif selected_location == "Food Mart":
+                    self.food_mart()
+                elif selected_location == "Town Hall":
+                    self.town_hall()
+                elif selected_location == "Beach":
+                    self.beach()
+                elif selected_location == "Fountain":
+                    self.fountain()
                 
             elif choice == len(self.unlocked_locations) + 1:    #save game
                 self.save_game(save_file)
@@ -134,7 +142,17 @@ class Island:
                 else:
                     print("Invalid choice.")
 
-            
+    def food_mart(self):
+        print("Hey there hungry boy")
+    
+    def town_hall(self):
+        print("Business business business")
+
+    def beach(self):
+        print("she sure is purdy sheldon")
+    
+    def fountain(self):
+        print("I just farted amd it smells so bad...")
 
     def inside_apt(self, islander):
         """Enter an islander's apartment."""
