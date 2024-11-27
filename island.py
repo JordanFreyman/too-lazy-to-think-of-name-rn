@@ -2,9 +2,16 @@ import sqlite3
 from islander import Islander
 from util import save_game_to_db, load_game_from_db
 from food import buy_food
+import random 
+import time, datetime
 
 class Island:
     def __init__(self, db_name="island_game.db"):
+        self.seconds = time.time()
+        self.local_time = time.ctime(self.seconds)
+        self.timenow = datetime.datetime.now()  # Full datetime object
+        # self.timenow = datetime.datetime(2024, 11, 27, hour=23,minute=11,second=0) #debugging for bedtime testing
+
         self.db_name = db_name
         self.islanders = []
         self.saved = False
@@ -15,6 +22,7 @@ class Island:
         self.locations = ["Apartments", "Town Hall", "Fountain", "Food Mart", "Clothing Shop", "Hat Shop", "Interior Shop", "Compatibility Tester", "Beach", "Tower",
                           "Rankings Board", "Mii News", "Concert Hall", "Pawn Shop", "Photo Studio", "Amusement Park", "Park", "Cafe", "Homes"]
         self.unlocked_locations = ["Apartments", "Food Mart", "Town Hall", "Beach", "Fountain"]
+
     
     def _initialize_db(self):
         """Initialize the SQLite database and create tables"""
@@ -56,6 +64,11 @@ class Island:
         else:
             print("Starting a new game.")
             self.tutorial()
+
+    def is_in_time_range(self, start, end, time):
+        if end < start:
+            return start < time or end > time
+        return start < time < end
 
     def tutorial(self):
         print("Hey, you! Welcome to The Cafeteria Room!")
@@ -125,13 +138,27 @@ class Island:
 
     def apts(self):
         """Visit an apartment of an islander."""
+        print(self.timenow) #for debugging. remove later
+        current_delta = datetime.timedelta(hours=self.timenow.hour, minutes=self.timenow.minute, seconds=self.timenow.second)
         print("\nApartments! Who to visit...")
         if len(self.islanders) == 0:
             print("\nNo one to visit...")
             return
         else:
             for idx, islander in enumerate(self.islanders, start=1):
-                print(f"{idx}) {islander.name}")
+                bed_datetime = datetime.datetime.combine(self.timenow.date(), datetime.time()) + islander.bedtime
+                wake_datetime = datetime.datetime.combine(self.timenow.date(), datetime.time()) + islander.waketime
+
+                sleeping = self.is_in_time_range(islander.bedtime, islander.waketime, current_delta)
+
+                if islander.sleeping_tonight and sleeping:
+                    print(f"{idx}) {islander.name} (asleep)")
+                else:
+                    print(f"{idx}) {islander.name}")
+            
+            #debug: check if all-nighter
+            # for i in self.islanders:
+            #     print(f"{i.name} chances: {i.chances}")
             print(f"{len(self.islanders)+1}) NVM")
             validChoice = False
             while not validChoice:
@@ -167,7 +194,8 @@ class Island:
             #settings page includes clock settings, change island name, and delete save data.
 
     def beach(self):
-        print("she sure is purdy sheldon")
+        some_islander = random.choice(self.islanders)
+        print(f"{some_islander.name} is frolicking in the sand...")
     
     def fountain(self):
         print("I just farted amd it smells so bad...")
@@ -175,3 +203,35 @@ class Island:
     def inside_apt(self, islander):
         """Enter an islander's apartment."""
         print(f"You are in {islander.name}'s home. Take your shoes off!\n")
+        # Convert waketime and bedtime into datetime objects for comparison
+        wake_datetime = datetime.datetime.combine(self.timenow.date(), datetime.time()) + islander.waketime
+        bed_datetime = datetime.datetime.combine(self.timenow.date(), datetime.time()) + islander.bedtime
+
+        # Get the current time as a timedelta
+        current_delta = datetime.timedelta(hours=self.timenow.hour, minutes=self.timenow.minute, seconds=self.timenow.second)
+
+        # Print for debugging
+        print(f"\n{islander.name} sleeping tonight: {islander.sleeping_tonight}\n{islander.name}'s waketime: {islander.waketime}\n{islander.name}'s bedtime: {islander.bedtime}")
+
+        # Use `is_in_time_range` with timedelta objects
+        sleeping = self.is_in_time_range(islander.bedtime, islander.waketime, current_delta)
+        # print(sleeping)
+
+        # Determine the state of the islander based on the current time
+        # if self.timenow > wake_datetime and self.timenow < bed_datetime and islander.bedtime.total_seconds() < 0:
+        #     print(f"{islander.name}: heyo!!\n")
+        # elif islander.bedtime.total_seconds() > 0 and self.timenow > wake_datetime and self.timenow > bed_datetime:
+        #     print(f"{islander.name}: hey bud\n")    #fix sleeping label in apartments method
+        # elif islander.sleeping_tonight == False:
+        #     print(f"{islander.name}: I'm pulling an all-nighter tonight. Care to join?\n")
+        # else:
+        #     print(f"{islander.name} is sleeping rn.\n")
+        print(islander.chances)
+        if islander.sleeping_tonight and not sleeping:
+            print(f"{islander.name}: heyo!!!\n")
+        elif not islander.sleeping_tonight and not sleeping:
+            print(f"{islander.name}: hey bud\n")
+        elif not islander.sleeping_tonight:
+            print(f"{islander.name}: I'm pulling an all-nighter tonight. Care to join?\n")
+        else:
+            print(f"{islander.name} is sleeping rn.\n")
