@@ -1,6 +1,6 @@
 import sqlite3
 from islander import Islander
-from util import save_game_to_db, load_game_from_db
+from util import save_game_to_db, load_game_from_db, save_islander_sleeping_status, print_table_schema, add_columns_if_not_exist, check_time_for_sleeping_randomization
 from food import buy_food
 import random 
 import time, datetime
@@ -9,8 +9,8 @@ class Island:
     def __init__(self, db_name="island_game.db"):
         self.seconds = time.time()
         self.local_time = time.ctime(self.seconds)
-        self.timenow = datetime.datetime.now()  # Full datetime object
-        # self.timenow = datetime.datetime(2024, 11, 27, hour=23,minute=11,second=0) #debugging for bedtime testing
+        # self.timenow = datetime.datetime.now()  # Full datetime object
+        self.timenow = datetime.datetime(2024, 11, 27, hour=10,minute=11,second=0) #debugging for bedtime testing
 
         self.db_name = db_name
         self.islanders = []
@@ -22,6 +22,9 @@ class Island:
         self.locations = ["Apartments", "Town Hall", "Fountain", "Food Mart", "Clothing Shop", "Hat Shop", "Interior Shop", "Compatibility Tester", "Beach", "Tower",
                           "Rankings Board", "Mii News", "Concert Hall", "Pawn Shop", "Photo Studio", "Amusement Park", "Park", "Cafe", "Homes"]
         self.unlocked_locations = ["Apartments", "Food Mart", "Town Hall", "Beach", "Fountain"]
+
+        for islander in self.islanders:
+            save_islander_sleeping_status(islander)
 
     
     def _initialize_db(self):
@@ -36,7 +39,8 @@ class Island:
             name TEXT,
             gender TEXT,
             age INTEGER,
-            height INTEGER
+            height INTEGER,
+            sleeping_tonight BOOLEAN DEFAULT 1
         )''')
 
         cursor.execute('''
@@ -50,7 +54,7 @@ class Island:
 
         conn.commit()
         conn.close()
-
+        add_columns_if_not_exist(self.db_name)
     def save_game(self, save_file):
         """Save the current state of the game."""
         save_game_to_db(self.name, self.islanders, self.db_name)  # Use utility function
@@ -58,17 +62,40 @@ class Island:
     
     def load_game(self, save_file):
         """Load the game state."""
+        for i in self.islanders:
+            # self.reset_sleeping_status(i, self.timenow)
+            save_islander_sleeping_status(i)
         self.name, self.islanders = load_game_from_db(self.db_name)  # Use utility function
         if self.islanders:
             print(f"Welcome back to {self.name} island!\n")
+            # Assuming you have a list of islanders and a 'current_time' value
+            check_time_for_sleeping_randomization(self.islanders, self.timenow)
+
         else:
             print("Starting a new game.")
             self.tutorial()
 
     def is_in_time_range(self, start, end, time):
-        if end < start:
-            return start < time or end > time
-        return start < time < end
+            # Ensure inputs are datetime.time objects
+            if isinstance(start, datetime.timedelta):
+                start = (datetime.datetime.min + start).time()
+            if isinstance(end, datetime.timedelta):
+                end = (datetime.datetime.min + end).time()
+            if isinstance(time, datetime.timedelta):
+                time = (datetime.datetime.min + time).time()
+
+            if end < start:  # Wraparound midnight case
+                return time >= start or time <= end
+            return start <= time <= end
+
+
+    # def reset_sleeping_status(self, islanders, current_time):
+    #     """Reset sleeping_tonight at 1 AM."""
+    #     if current_time.hour == 1 and current_time.minute == 0:
+    #         print("RAAAAA")
+    #         for islander in islanders:
+    #             islander.sleeping_tonight = True
+    #             save_islander_sleeping_status(islander)  # Persist change
 
     def tutorial(self):
         print("Hey, you! Welcome to The Cafeteria Room!")
@@ -138,6 +165,9 @@ class Island:
 
     def apts(self):
         """Visit an apartment of an islander."""
+        for i in self.islanders:
+            print(f"{i.name} - {i.sleeping_tonight}")
+            print_table_schema()
         print(self.timenow) #for debugging. remove later
         current_delta = datetime.timedelta(hours=self.timenow.hour, minutes=self.timenow.minute, seconds=self.timenow.second)
         print("\nApartments! Who to visit...")
@@ -146,15 +176,36 @@ class Island:
             return
         else:
             for idx, islander in enumerate(self.islanders, start=1):
-                bed_datetime = datetime.datetime.combine(self.timenow.date(), datetime.time()) + islander.bedtime
-                wake_datetime = datetime.datetime.combine(self.timenow.date(), datetime.time()) + islander.waketime
+                # Convert bedtime and waketime to datetime.time objects
+                # bed_time_obj = datetime.datetime.strptime(islander.bedtime, '%H:%M').time()
+                # wake_time_obj = datetime.datetime.strptime(islander.waketime, '%H:%M').time()
 
-                sleeping = self.is_in_time_range(islander.bedtime, islander.waketime, current_delta)
+
+
+                # Check if the current time falls within the range
+                # sleeping = self.is_in_time_range(bed_time_obj, wake_time_obj, self.timenow.time())
+
+                # Assuming islander.bedtime and islander.waketime are datetime.timedelta objects
+                bed_time_hours = islander.bedtime.seconds // 3600  # Extract hours from timedelta
+                bed_time_minutes = (islander.bedtime.seconds // 60) % 60  # Extract minutes from timedelta
+
+                wake_time_hours = islander.waketime.seconds // 3600  # Extract hours from timedelta
+                wake_time_minutes = (islander.waketime.seconds // 60) % 60  # Extract minutes from timedelta
+
+                # Create datetime objects for bedtime and waketime using current date to compare with timenow
+                bed_time_obj = datetime.time(bed_time_hours, bed_time_minutes)
+                wake_time_obj = datetime.time(wake_time_hours, wake_time_minutes)
+
+                # Now, use these time objects in the comparison
+                sleeping = self.is_in_time_range(bed_time_obj, wake_time_obj, self.timenow.time())
+
+
 
                 if islander.sleeping_tonight and sleeping:
                     print(f"{idx}) {islander.name} (asleep)")
                 else:
                     print(f"{idx}) {islander.name}")
+
             
             #debug: check if all-nighter
             # for i in self.islanders:
@@ -204,29 +255,17 @@ class Island:
         """Enter an islander's apartment."""
         print(f"You are in {islander.name}'s home. Take your shoes off!\n")
         # Convert waketime and bedtime into datetime objects for comparison
-        wake_datetime = datetime.datetime.combine(self.timenow.date(), datetime.time()) + islander.waketime
-        bed_datetime = datetime.datetime.combine(self.timenow.date(), datetime.time()) + islander.bedtime
+        # wake_datetime = datetime.datetime.combine(self.timenow.date(), datetime.time()) + islander.waketime
+        # bed_datetime = datetime.datetime.combine(self.timenow.date(), datetime.time()) + islander.bedtime
 
         # Get the current time as a timedelta
         current_delta = datetime.timedelta(hours=self.timenow.hour, minutes=self.timenow.minute, seconds=self.timenow.second)
-
         # Print for debugging
         print(f"\n{islander.name} sleeping tonight: {islander.sleeping_tonight}\n{islander.name}'s waketime: {islander.waketime}\n{islander.name}'s bedtime: {islander.bedtime}")
 
         # Use `is_in_time_range` with timedelta objects
         sleeping = self.is_in_time_range(islander.bedtime, islander.waketime, current_delta)
-        # print(sleeping)
 
-        # Determine the state of the islander based on the current time
-        # if self.timenow > wake_datetime and self.timenow < bed_datetime and islander.bedtime.total_seconds() < 0:
-        #     print(f"{islander.name}: heyo!!\n")
-        # elif islander.bedtime.total_seconds() > 0 and self.timenow > wake_datetime and self.timenow > bed_datetime:
-        #     print(f"{islander.name}: hey bud\n")    #fix sleeping label in apartments method
-        # elif islander.sleeping_tonight == False:
-        #     print(f"{islander.name}: I'm pulling an all-nighter tonight. Care to join?\n")
-        # else:
-        #     print(f"{islander.name} is sleeping rn.\n")
-        print(islander.chances)
         if islander.sleeping_tonight and not sleeping:
             print(f"{islander.name}: heyo!!!\n")
         elif not islander.sleeping_tonight and not sleeping:

@@ -49,7 +49,7 @@ def buy_food():
                     count += 1
                     print(f"{count}) {i.name} - ${i.price}\n{i.description}\n")
                 food_choice = int(input("Select a food: "))
-                quantity = int(input("Cuanto?"))
+                quantity = int(input("Cuanto? "))
                 if 1 <= food_choice <= len(dailies):
                     print(f"you bought {quantity} {dailies[food_choice-1].name}")
                     # bought_food.append(dailies[food_choice-1])
@@ -61,7 +61,7 @@ def buy_food():
                     count += 1
                     print(f"{count}) {i.name} - ${i.price}\n{i.description}\n")
                 food_choice = int(input("Select a food: "))
-                quantity = int(input("Cuanto?"))
+                quantity = int(input("Cuanto? "))
                 if 1 <= food_choice <= len(selection):
                     print(f"you bought {quantity} {selection[food_choice-1].name}")
                     # bought_food.append(selection[food_choice-1])

@@ -1,69 +1,83 @@
 # util.py
 import sqlite3
 from islander import Islander
+import datetime, random
 
 def save_game_to_db(island, islanders, db_name="island_game.db"):
     """Save the current state of the game to the SQLite database."""
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
 
+    # Ensure tables exist
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS island (
         name TEXT
     )''')
-
     cursor.execute('''
-    INSERT OR REPLACE INTO island (name) VALUES (?)
-    ''', (island,))
-    
-    # Save islander's main details
+    CREATE TABLE IF NOT EXISTS islanders (
+        id INTEGER PRIMARY KEY,
+        name TEXT UNIQUE,
+        gender TEXT,
+        age INTEGER,
+        height REAL,
+        sleeping_tonight INTEGER,
+        bedtime INTEGER,
+        waketime INTEGER
+    )''')
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS appearance (
+        islander_id INTEGER,
+        hair TEXT,
+        eyes TEXT,
+        voice TEXT,
+        FOREIGN KEY(islander_id) REFERENCES islanders(id)
+    )''')
+
+    # Save island details
+    cursor.execute('INSERT OR REPLACE INTO island (name) VALUES (?)', (island,))
+
+    # Save islanders
     for islander in islanders:
         cursor.execute('SELECT id FROM islanders WHERE name = ?', (islander.name,))
         existing_islander = cursor.fetchone()
 
+        bedtime_seconds = int(islander.bedtime.total_seconds())
+        waketime_seconds = int(islander.waketime.total_seconds())
+
         if existing_islander:
             # Update existing record
-            islander_id = existing_islander[0]
             cursor.execute('''
             UPDATE islanders 
-            SET gender = ?, age = ?, height = ?
+            SET gender = ?, age = ?, height = ?, sleeping_tonight = ?, bedtime = ?, waketime = ?
             WHERE id = ?
-            ''', (islander.gender, islander.age, islander.height, islander_id))
-
-            # Update appearance details
-            cursor.execute('''
-            UPDATE appearance
-            SET hair = ?, eyes = ?, voice = ?
-            WHERE islander_id = ?
-            ''', (islander.hair, islander.eyes, islander.voice, islander_id))
+            ''', (
+                islander.gender, islander.age, islander.height,
+                int(islander.sleeping_tonight), bedtime_seconds, waketime_seconds,
+                existing_islander[0]
+            ))
         else:
-            # Insert new islander
+            # Insert new record
             cursor.execute('''
-            INSERT INTO islanders (name, gender, age, height)
-            VALUES (?, ?, ?, ?)
-            ''', (islander.name, islander.gender, islander.age, islander.height))
-
-            islander_id = cursor.lastrowid
-
-            # Insert appearance details
-            cursor.execute('''
-            INSERT INTO appearance (islander_id, hair, eyes, voice)
-            VALUES (?, ?, ?, ?)
-            ''', (islander_id, islander.hair, islander.eyes, islander.voice))
+            INSERT INTO islanders (name, gender, age, height, sleeping_tonight, bedtime, waketime)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                islander.name, islander.gender, islander.age, islander.height,
+                int(islander.sleeping_tonight), bedtime_seconds, waketime_seconds
+            ))
 
     conn.commit()
     conn.close()
-    print("Game saved.")
+
 
 def load_game_from_db(db_name="island_game.db"):
-    """Load the game state from the SQLite database."""
+    """Load the game state from the SQLite database without overwriting valid bedtimes and waketimes."""
     islanders = []
     island_name = ""
     try:
         conn = sqlite3.connect(db_name)
         cursor = conn.cursor()
 
-        #Fetch the island name from the island table
+        # Fetch the island name
         cursor.execute('SELECT name FROM island')
         row = cursor.fetchone()
         if row:
@@ -74,22 +88,167 @@ def load_game_from_db(db_name="island_game.db"):
         rows = cursor.fetchall()
 
         for row in rows:
-            if len(row) >= 5:  # Ensure there are enough columns
-                name, gender, age, height = row[1], row[2], row[3], row[4]
-                islander = Islander(name, row, gender, age, height)
+            (
+                islander_id, name, gender, age, height, 
+                sleeping_tonight, bed_time_seconds, wake_time_seconds
+            ) = row
 
-                # Load appearance details
-                cursor.execute('SELECT * FROM appearance WHERE islander_id = ?', (row[0],))
-                appearance_row = cursor.fetchone()
+            # Create the Islander object
+            islander = Islander(name, gender, age, height, bool(sleeping_tonight))
 
-                if appearance_row:
-                    islander.hair = appearance_row[1]
-                    islander.eyes = appearance_row[2]
-                    islander.voice = appearance_row[3]
+            # Ensure bed_time_seconds and wake_time_seconds are integers (handle if they are strings or None)
+            try:
+                bed_time_seconds = int(float(bed_time_seconds)) if bed_time_seconds else 0
+            except ValueError:
+                bed_time_seconds = 0  # Default to 0 if conversion fails
 
-                islanders.append(islander)
+            try:
+                wake_time_seconds = int(float(wake_time_seconds)) if wake_time_seconds else 0
+            except ValueError:
+                wake_time_seconds = 0  # Default to 0 if conversion fails
+
+
+            # Handle bedtime
+            if bed_time_seconds is None or bed_time_seconds == 0:
+                # Randomize only if missing or invalid
+                startbed_seconds = 21 * 3600 + 30 * 60  # 9:30 PM
+                endbed_seconds = (1 + 24) * 3600 + 30 * 60  # 1:30 AM next day
+                bed_rand_seconds = random.randint(startbed_seconds, endbed_seconds)
+                islander.bedtime = datetime.timedelta(seconds=bed_rand_seconds % (24 * 3600))
+            else:
+                islander.bedtime = datetime.timedelta(seconds=int(bed_time_seconds))
+
+            # Handle waketime
+            if wake_time_seconds is None or wake_time_seconds == 0:
+                # Randomize only if missing or invalid
+                start_seconds = 6 * 3600 + 30 * 60  # 6:30 AM
+                end_seconds = 10 * 3600  # 10:00 AM
+                rand_seconds = random.randint(start_seconds, end_seconds)
+                islander.waketime = datetime.timedelta(seconds=rand_seconds)
+            else:
+                islander.waketime = datetime.timedelta(seconds=int(wake_time_seconds))
+
+            # Fetch appearance details
+            cursor.execute('SELECT * FROM appearance WHERE islander_id = ?', (islander_id,))
+            appearance_row = cursor.fetchone()
+            if appearance_row:
+                islander.hair, islander.eyes, islander.voice = appearance_row[1:]
+
+            islanders.append(islander)
 
         conn.close()
     except sqlite3.Error as e:
         print(f"Error loading game: {e}")
     return island_name, islanders
+
+
+
+
+# def load_game_from_db(db_name="island_game.db"):
+#     """Load the game state from the SQLite database."""
+#     islanders = []
+#     island_name = ""
+#     try:
+#         conn = sqlite3.connect(db_name)
+#         cursor = conn.cursor()
+
+#         #Fetch the island name from the island table
+#         cursor.execute('SELECT name FROM island')
+#         row = cursor.fetchone()
+#         if row:
+#             island_name = row[0]
+
+#         # Fetch all islanders
+#         cursor.execute('SELECT * FROM islanders')
+#         rows = cursor.fetchall()
+
+#         for row in rows:
+#             # Ensure enough columns are present
+#             if len(row) >= 5:
+#                 name, gender, age, height, sleeping_tonight = row[1], row[2], row[3], row[4], row[5]
+
+#                 startbed_seconds = 21 * 3600 + 30 * 60  # 9:30 PM in seconds
+#                 endbed_seconds = (1 + 24) * 3600 + 30 * 60  # 1:30 AM (next day) in seconds
+#                 bed_rand_seconds = random.randint(startbed_seconds, endbed_seconds)
+#                 bedtime = row[6] if len(row) > 6 else datetime.timedelta(seconds=bed_rand_seconds % (24 * 3600))
+
+#                 start_seconds = 6 * 3600 + 30 * 60  # 6:30 AM in seconds
+#                 end_seconds = 10 * 3600  # 10:00 AM in seconds
+#                 rand_seconds = random.randint(start_seconds, end_seconds)
+#                 waketime = row[7] if len(row) > 7 else datetime.timedelta(seconds=rand_seconds)
+
+#                 islander = Islander(name, gender, age, height, bool(sleeping_tonight))
+#                 islander.bedtime = bedtime
+#                 islander.waketime = waketime
+
+#                 # Load appearance details
+#                 cursor.execute('SELECT * FROM appearance WHERE islander_id = ?', (row[0],))
+#                 appearance_row = cursor.fetchone()
+
+#                 if appearance_row:
+#                     islander.hair = appearance_row[1]
+#                     islander.eyes = appearance_row[2]
+#                     islander.voice = appearance_row[3]
+#                 print(f"Loading {islander.name}: sleeping_tonight={islander.sleeping_tonight}")
+
+#                 islanders.append(islander)
+#         conn.close()
+#     except sqlite3.Error as e:
+#         print(f"Error loading game: {e}")
+#     return island_name, islanders
+
+def save_islander_sleeping_status(islander, db_name="island_game.db"):
+    """Save sleeping_tonight status for an islander to the database."""
+    try:
+        conn = sqlite3.connect(db_name)
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE islanders SET sleeping_tonight = ? WHERE name = ?",
+            (int(islander.sleeping_tonight), islander.name),
+        )
+        conn.commit()
+        print(f"Loaded {islander.name}: sleeping_tonight={islander.sleeping_tonight}")
+        conn.close()
+    except sqlite3.Error as e:
+        print(f"Error saving sleeping status: {e}")
+
+def add_columns_if_not_exist(db_name="island_game.db"):
+    """Ensure the database has bedtime and waketime columns."""
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+    
+    # Check if 'bedtime' and 'waketime' columns exist
+    cursor.execute("PRAGMA table_info(islanders);")
+    columns = [col[1] for col in cursor.fetchall()]
+    if "bedtime" not in columns:
+        cursor.execute("ALTER TABLE islanders ADD COLUMN bedtime TEXT DEFAULT '{bedtime}'")
+    if "waketime" not in columns:
+        cursor.execute("ALTER TABLE islanders ADD COLUMN waketime TEXT DEFAULT '{waketime}'")
+    conn.commit()
+    conn.close()
+
+
+
+# add_column_if_not_exists()
+def print_table_schema(db_name="island_game.db"):
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(islanders);")
+    schema = cursor.fetchall()
+    conn.close()
+    print(schema)
+
+
+def check_time_for_sleeping_randomization(islanders, current_time):
+    """Check if it's time to randomize sleeping_tonight for each islander."""
+    for islander in islanders:
+        # Get the hour after the islander's waketime
+        waketime_hour = islander.waketime.seconds // 3600  # Convert waketime from timedelta to hour
+        hour_after_wake = waketime_hour + 1  # The hour after the islander's wake time
+        
+        # Get the current hour
+        current_hour = current_time.hour
+        
+        # Check if the current time is the hour after the islander's waketime
+        if current_hour == hour_after_wake:
+            islander.randomize_sleeping_tonight()
