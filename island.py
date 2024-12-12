@@ -9,8 +9,8 @@ class Island:
     def __init__(self, db_name="island_game.db"):
         self.seconds = time.time()
         self.local_time = time.ctime(self.seconds)
-        # self.timenow = datetime.datetime.now()  # Full datetime object
-        self.timenow = datetime.datetime(2024, 12, 12, hour=10,minute=30,second=0) #debugging for bedtime testing
+        self.timenow = datetime.datetime.now()  # Full datetime object
+        # self.timenow = datetime.datetime(2024, 12, 11, hour=10,minute=30,second=0) #debugging for bedtime testing
 
         self.db_name = db_name
         self.islanders = []
