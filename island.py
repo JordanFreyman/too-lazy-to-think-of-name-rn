@@ -10,7 +10,7 @@ class Island:
         self.seconds = time.time()
         self.local_time = time.ctime(self.seconds)
         # self.timenow = datetime.datetime.now()  # Full datetime object
-        self.timenow = datetime.datetime(2024, 11, 27, hour=10,minute=11,second=0) #debugging for bedtime testing
+        self.timenow = datetime.datetime(2024, 11, 27, hour=1,minute=0,second=0) #debugging for bedtime testing
 
         self.db_name = db_name
         self.islanders = []
@@ -63,7 +63,7 @@ class Island:
     def load_game(self, save_file):
         """Load the game state."""
         for i in self.islanders:
-            # self.reset_sleeping_status(i, self.timenow)
+            self.reset_sleeping_status(i, self.timenow)
             save_islander_sleeping_status(i)
         self.name, self.islanders = load_game_from_db(self.db_name)  # Use utility function
         if self.islanders:
@@ -89,13 +89,13 @@ class Island:
             return start <= time <= end
 
 
-    # def reset_sleeping_status(self, islanders, current_time):
-    #     """Reset sleeping_tonight at 1 AM."""
-    #     if current_time.hour == 1 and current_time.minute == 0:
-    #         print("RAAAAA")
-    #         for islander in islanders:
-    #             islander.sleeping_tonight = True
-    #             save_islander_sleeping_status(islander)  # Persist change
+    def reset_sleeping_status(self, islanders, current_time):
+        """Reset sleeping_tonight at 1 AM."""
+        if current_time.hour == 1 and current_time.minute == 0:
+            print("RAAAAA")
+            for islander in islanders:
+                islander.randomize_sleeping_tonight()
+                save_islander_sleeping_status(islander)  # Persist change
 
     def tutorial(self):
         print("Hey, you! Welcome to The Cafeteria Room!")
