@@ -31,6 +31,5 @@ class Islander:
     def randomize_sleeping_tonight(self):
         """Randomize sleeping_tonight if certain conditions are met (e.g., time of day or game state)."""
         chances = random.randint(0, 4)
-        print(chances)
         if chances == 4:
             self.sleeping_tonight = False

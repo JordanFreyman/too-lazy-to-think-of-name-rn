@@ -27,7 +27,9 @@ class Island:
         for islander in self.islanders:
             save_islander_sleeping_status(islander)
 
-    
+    def advance_time(self, seconds=1):
+        self.timenow += datetime.timedelta(seconds=seconds)
+
     def _initialize_db(self):
         """Initialize the SQLite database and create tables"""
         conn = sqlite3.connect(self.db_name)
@@ -75,6 +77,7 @@ class Island:
         conn.commit()
         conn.close()
         self.saved = True
+        print(f"Game saved. {random.choice(self.islanders).name} appreciates it!\n")
     
     def load_game(self, save_file):
         """Load the game state."""
@@ -179,6 +182,13 @@ class Island:
             elif choice == len(self.unlocked_locations) + 1:    #save game
                 self.save_game(save_file)
             elif choice == len(self.unlocked_locations) + 2:    #exit game
+                if self.last_login:
+                    time_diff = self.timenow - self.last_login
+                    # print(f"time difference since last save is : {time_diff}\nsaved = {self.saved}")
+                    if time_diff >= datetime.timedelta(minutes=10):
+                        self.saved = False
+                    else:
+                        self.saved = True
                 if not self.saved:
                     sureSaved = input("You have not saved the game. Are you sure you would like to quit? (Y/N)\n").lower()
                     if sureSaved == "y":
@@ -199,11 +209,10 @@ class Island:
 
     def apts(self):
         """Visit an apartment of an islander."""
-        for i in self.islanders:
-            print(f"{i.name} - {i.sleeping_tonight}")
-            print_table_schema()
-        print(self.timenow) #for debugging. remove later
-        current_delta = datetime.timedelta(hours=self.timenow.hour, minutes=self.timenow.minute, seconds=self.timenow.second)
+        # for i in self.islanders:
+        #     print(f"{i.name} - {i.sleeping_tonight}")
+            # print_table_schema()
+        # print(self.timenow) #for debugging. remove later
         print("\nApartments! Who to visit...")
         if len(self.islanders) == 0:
             print("\nNo one to visit...")
@@ -294,8 +303,8 @@ class Island:
 
         # Get the current time as a timedelta
         current_delta = datetime.timedelta(hours=self.timenow.hour, minutes=self.timenow.minute, seconds=self.timenow.second)
-        # Print for debugging
-        print(f"\n{islander.name} sleeping tonight: {islander.sleeping_tonight}\n{islander.name}'s waketime: {islander.waketime}\n{islander.name}'s bedtime: {islander.bedtime}")
+        # Print for debugging!!!!!!!!!!
+        # print(f"\n{islander.name} sleeping tonight: {islander.sleeping_tonight}\n{islander.name}'s waketime: {islander.waketime}\n{islander.name}'s bedtime: {islander.bedtime}")
 
         # Use `is_in_time_range` with timedelta objects
         sleeping = self.is_in_time_range(islander.bedtime, islander.waketime, current_delta)

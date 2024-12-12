@@ -1,6 +1,7 @@
 import sqlite3
 from island import Island
 from islander import Islander
+import time
 
 if __name__ == "__main__":
     # Save file location
