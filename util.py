@@ -3,15 +3,32 @@ import sqlite3
 from islander import Islander
 import datetime, random
 
+def ensure_last_login_column(db_name):
+    """Ensure the last_login column exists in the island table."""
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+
+    # Check if 'last_login' column exists
+    cursor.execute("PRAGMA table_info(island);")
+    columns = [col[1] for col in cursor.fetchall()]
+    if "last_login" not in columns:
+        cursor.execute("ALTER TABLE island ADD COLUMN last_login TEXT")
+        conn.commit()
+
+    conn.close()
+
+
 def save_game_to_db(island, islanders, db_name="island_game.db"):
     """Save the current state of the game to the SQLite database."""
+    ensure_last_login_column(db_name)
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
 
     # Ensure tables exist
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS island (
-        name TEXT
+        name TEXT,
+        last_login TEXT
     )''')
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS islanders (
@@ -34,7 +51,8 @@ def save_game_to_db(island, islanders, db_name="island_game.db"):
     )''')
 
     # Save island details
-    cursor.execute('INSERT OR REPLACE INTO island (name) VALUES (?)', (island,))
+    cursor.execute('INSERT OR REPLACE INTO island (name, last_login) VALUES (?, ?)', (island, datetime.datetime.now().isoformat()))
+    cursor.execute("UPDATE island SET last_login = ? WHERE last_login IS NULL", (datetime.datetime.now().isoformat(),))
 
     # Save islanders
     for islander in islanders:
@@ -73,15 +91,18 @@ def load_game_from_db(db_name="island_game.db"):
     """Load the game state from the SQLite database without overwriting valid bedtimes and waketimes."""
     islanders = []
     island_name = ""
+    last_login = None  # Use None if no value is available
     try:
         conn = sqlite3.connect(db_name)
         cursor = conn.cursor()
 
         # Fetch the island name
-        cursor.execute('SELECT name FROM island')
-        row = cursor.fetchone()
+        cursor.execute('SELECT * FROM island')
+        row = cursor.fetchall()
         if row:
-            island_name = row[0]
+            island_name = row[0][0]
+            last_login = datetime.datetime.fromisoformat(row[0][1]) if len(row[0])>1 and row[0][1] else None
+
 
         # Fetch all islanders
         cursor.execute('SELECT * FROM islanders')
@@ -139,7 +160,7 @@ def load_game_from_db(db_name="island_game.db"):
         conn.close()
     except sqlite3.Error as e:
         print(f"Error loading game: {e}")
-    return island_name, islanders
+    return island_name, islanders, last_login
 
 
 

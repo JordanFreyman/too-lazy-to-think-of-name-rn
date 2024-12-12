@@ -11,5 +11,5 @@ if __name__ == "__main__":
 
     # Main game loop
     while True:
-        print(leIsland.local_time)
+        print(leIsland.timenow)
         leIsland.map(save_file)

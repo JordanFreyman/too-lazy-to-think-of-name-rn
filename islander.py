@@ -13,19 +13,20 @@ class Islander:
 
         self.bedtime = None
         self.waketime = None
-        self.set_bedtime_waketime()
+        self.set_waketime()
+        self.set_bedtime()
 
-    def set_bedtime_waketime(self):
-        # Set bedtime and waketime (doesn't randomize every time now)
-        startbed_seconds = 21 * 3600 + 30 * 60  # 9:30 PM in seconds
-        endbed_seconds = (1 + 24) * 3600 + 30 * 60  # 1:30 AM (next day) in seconds
-        bed_rand_seconds = random.randint(startbed_seconds, endbed_seconds)
-        self.bedtime = datetime.timedelta(seconds=bed_rand_seconds % (24 * 3600))  # Wrap to 24 hours
-
+    def set_waketime(self):
         start_seconds = 6 * 3600 + 30 * 60  # 6:30 AM in seconds
         end_seconds = 10 * 3600  # 10:00 AM in seconds
         rand_seconds = random.randint(start_seconds, end_seconds)
         self.waketime = datetime.timedelta(seconds=rand_seconds)
+
+    def set_bedtime(self):
+        startbed_seconds = 21 * 3600 + 30 * 60  # 9:30 PM in seconds
+        endbed_seconds = (1 + 24) * 3600 + 30 * 60  # 1:30 AM (next day) in seconds
+        bed_rand_seconds = random.randint(startbed_seconds, endbed_seconds)
+        self.bedtime = datetime.timedelta(seconds=bed_rand_seconds % (24 * 3600))  # Wrap to 24 hours
 
     def randomize_sleeping_tonight(self):
         """Randomize sleeping_tonight if certain conditions are met (e.g., time of day or game state)."""

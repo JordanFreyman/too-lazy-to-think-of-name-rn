@@ -10,12 +10,13 @@ class Island:
         self.seconds = time.time()
         self.local_time = time.ctime(self.seconds)
         # self.timenow = datetime.datetime.now()  # Full datetime object
-        self.timenow = datetime.datetime(2024, 11, 27, hour=1,minute=0,second=0) #debugging for bedtime testing
+        self.timenow = datetime.datetime(2024, 12, 12, hour=10,minute=30,second=0) #debugging for bedtime testing
 
         self.db_name = db_name
         self.islanders = []
         self.saved = False
         self.name = ""
+        self.last_login = None  # Use None if no value is available
         self.money = 0.0
         self.unlocked_food = []
         self._initialize_db()
@@ -57,15 +58,35 @@ class Island:
         add_columns_if_not_exist(self.db_name)
     def save_game(self, save_file):
         """Save the current state of the game."""
+        self.last_login = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         save_game_to_db(self.name, self.islanders, self.db_name)  # Use utility function
+
+        conn = sqlite3.connect(self.db_name)
+        cursor = conn.cursor()
+        
+        # Update the island table with the last_login value
+        cursor.execute('''
+            UPDATE island
+            SET last_login = ?
+            WHERE name = ?
+        ''', (self.last_login, self.name))
+        
+        conn.commit()
+        conn.close()
         self.saved = True
     
     def load_game(self, save_file):
         """Load the game state."""
+        self.name, self.islanders, self.last_login = load_game_from_db(self.db_name)
+        if self.last_login:
+            print(f"last login: {self.last_login}")
+        else:
+            print("No previous login time recorded.")
+        
         for i in self.islanders:
-            self.reset_sleeping_status(i, self.timenow)
-            save_islander_sleeping_status(i)
-        self.name, self.islanders = load_game_from_db(self.db_name)  # Use utility function
+            self.reset_sleeping_status(i)
+
         if self.islanders:
             print(f"Welcome back to {self.name} island!\n")
             # Assuming you have a list of islanders and a 'current_time' value
@@ -89,13 +110,26 @@ class Island:
             return start <= time <= end
 
 
-    def reset_sleeping_status(self, islanders, current_time):
-        """Reset sleeping_tonight at 1 AM."""
-        if current_time.hour == 1 and current_time.minute == 0:
-            print("RAAAAA")
-            for islander in islanders:
-                islander.randomize_sleeping_tonight()
-                save_islander_sleeping_status(islander)  # Persist change
+    def reset_sleeping_status(self, islander):
+        # if self.last_login and (self.timenow.date() != self.last_login.date()) and self.timenow.hour >= 2:
+        #     print("DEBUG!!!")
+        #     islander.randomize_sleeping_tonight()
+        #     islander.set_bedtime_waketime()
+        #     save_islander_sleeping_status(islander)
+        # wktime = datetime.datetime.strptime(str(islander.waketime), "%H:%M:%S")
+        # bdtime = datetime.datetime.strptime(str(islander.bedtime), "%H:%M:%S")
+        #set new waketime
+        if self.timenow.hour >= 12 and self.timenow.minute >= 0 and self.last_login and self.timenow.date() != self.last_login.date():
+            print(f"set new waketime for {islander.name}")
+            # islander.randomize_sleeping_tonight()
+            islander.set_waketime()
+
+        #set new bedtime
+        if self.timenow.hour < 20 and self.timenow.hour > 6 and self.last_login and self.timenow.date() != self.last_login.date():
+            print(f"set new bedtime for {islander.name}")
+            islander.set_bedtime()
+            islander.randomize_sleeping_tonight()
+            
 
     def tutorial(self):
         print("Hey, you! Welcome to The Cafeteria Room!")
