@@ -2,34 +2,49 @@
     "Main Dish": [
       {
         "name": "Steak",
-        "price": 14.99,
+        "price": 15,
         "description": "Oh boy!!! A big ol' juicy MMMM!!!"
       },
       {
         "name": "Spaghetti",
-        "price": 5.99,
-        "description": "A classic Italian pasta dish with tomato sauce and meatballs."
+        "price": 6,
+        "description": "I cook-a the pasta"
+      },
+      {
+        "name": "Lobster",
+        "price": 9,
+        "description": "Get your bib out for this one!"
       }
     ],
     "Side Dish": [
       {
         "name": "Garlic Bread",
-        "price": 2.99,
-        "description": "Crispy bread topped with garlic butter and herbs."
+        "price": 3,
+        "description": "Olive Garden wishes they could top this."
       }
     ],
     "Dessert": [
       {
         "name": "Chocolate Cake",
-        "price": 3.99,
-        "description": "Rich and moist chocolate cake with creamy frosting."
+        "price": 4,
+        "description": "Rich and moisty chocolate cake with creamy frosting."
+      },
+      {
+        "name": "Cupcake",
+        "price": 1,
+        "description": "Oh, won't you be just a little bad and indulge?"
       }
     ],
     "Beverage": [
       {
         "name": "Orange Juice",
-        "price": 1.99,
-        "description": "Freshly squeezed orange juice with no added sugars."
+        "price": 2,
+        "description": "Doesn't mix well with freshly-brushed teeth, but delicious any other time!"
+      },
+      {
+        "name": "Milk",
+        "price": 1,
+        "description": "Keep away from the legendary Puss in Boots at all times."
       }
     ]
   }

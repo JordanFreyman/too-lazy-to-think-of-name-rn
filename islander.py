@@ -16,6 +16,8 @@ class Islander:
         self.set_waketime()
         self.set_bedtime()
 
+        self.relationships = []
+
     def set_waketime(self):
         start_seconds = 6 * 3600 + 30 * 60  # 6:30 AM in seconds
         end_seconds = 10 * 3600  # 10:00 AM in seconds

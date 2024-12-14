@@ -1,6 +1,6 @@
 import sqlite3
 from islander import Islander
-from util import save_game_to_db, load_game_from_db, save_islander_sleeping_status, print_table_schema, add_columns_if_not_exist, check_time_for_sleeping_randomization
+from util import *
 from food import buy_food
 import random 
 import time, datetime
@@ -11,6 +11,8 @@ class Island:
         self.local_time = time.ctime(self.seconds)
         self.timenow = datetime.datetime.now()  # Full datetime object
         # self.timenow = datetime.datetime(2024, 12, 11, hour=10,minute=30,second=0) #debugging for bedtime testing
+
+        self.fountain_visited = False
 
         self.db_name = db_name
         self.islanders = []
@@ -177,6 +179,8 @@ class Island:
                 elif selected_location == "Beach":
                     self.beach()
                 elif selected_location == "Fountain":
+                    if self.timenow.date() != self.last_login.date():
+                        self.fountain_visited = False
                     self.fountain()
                 
             elif choice == len(self.unlocked_locations) + 1:    #save game
@@ -272,7 +276,6 @@ class Island:
         buy_food()
     
     def town_hall(self):
-        print("Business business business")
         print(f"Welcome to the Town Hall of {self.name}!\n"
               "1) New Islander\n2) Resident List\n3) Collection\n4) Settings")
         choice = int(input("Make a selection: "))
@@ -292,7 +295,16 @@ class Island:
         print(f"{some_islander.name} is frolicking in the sand...")
     
     def fountain(self):
-        print("I just farted amd it smells so bad...")
+        if self.timenow.date() != self.last_login.date():
+            self.fountain_visited = True
+        print("Collecting island donations...")
+        totaldonations = 0
+        for i in self.islanders:
+            donation = random.randint(1,5)
+            print(f"{i.name} donated ${donation}!")
+            totaldonations += donation
+        print(f"${totaldonations} collected today")
+        self.money += totaldonations
 
     def inside_apt(self, islander):
         """Enter an islander's apartment."""

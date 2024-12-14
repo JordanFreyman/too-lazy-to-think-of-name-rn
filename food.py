@@ -39,10 +39,10 @@ def buy_food():
     bought_food = []
     selection = load_food_items("food.json")
     dailies = generate_random(selection)
-    print("(1) Daily Specials, or (2) In Stock?\n")
+    print("(1) Daily Specials, or (2) In Stock?\n(3) Exit\n")
     try:
         choice = int(input("Make a selection: "))
-        if 1 <= choice <= 2:
+        if 1 <= choice <= 3:
             if choice == 1:
                 count = 0
                 for i in dailies:
@@ -55,7 +55,7 @@ def buy_food():
                     # bought_food.append(dailies[food_choice-1])
                 else:
                     print("wrong")
-            else:
+            elif choice == 2:
                 count = 0
                 for i in selection:
                     count += 1
@@ -67,6 +67,9 @@ def buy_food():
                     # bought_food.append(selection[food_choice-1])
                 else:
                     print("wrong")
+            else:
+                print("See yuh again soon")
+                return
         else:
             print("Invalid input.")
     except ValueError:
