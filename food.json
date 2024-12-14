@@ -21,6 +21,16 @@
         "name": "Garlic Bread",
         "price": 3,
         "description": "Olive Garden wishes they could top this."
+      },
+      {
+        "name": "Plutonium",
+        "price": 5,
+        "description": "Ooh shiny! Just one bite couldn't hurt!"
+      },
+      {
+        "name": "Cleveland Brown Skylander",
+        "price": 3,
+        "description": "If you enjoy plastic toys and protagonists of mediocre adult cartoons, by all means."
       }
     ],
     "Dessert": [
@@ -38,6 +48,11 @@
         "name": "Fairy Bread",
         "price": 2,
         "description": "Bread of the fae. Definitely NOT just bread with butter and sprinkles."
+      },
+      {
+        "name": "Sugar Cubes",
+        "price": 1,
+        "description": "Don't look at me like that. You know you want one."
       }
     ],
     "Beverage": [

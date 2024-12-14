@@ -13,7 +13,7 @@ class Island:
         # self.timenow = datetime.datetime(2024, 12, 11, hour=10,minute=30,second=0) #debugging for bedtime testing
 
         self.fountain_visited = False
-
+        self.dailies_food = []
         self.db_name = db_name
         self.islanders = []
         self.saved = False
@@ -65,7 +65,7 @@ class Island:
         """Save the current state of the game."""
         self.last_login = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        save_game_to_db(self.name, self.islanders, self.db_name)  # Use utility function
+        save_game_to_db(self.name, self.islanders, self.dailies_food, self.db_name)  # Use utility function
 
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
@@ -84,7 +84,7 @@ class Island:
     
     def load_game(self, save_file):
         """Load the game state."""
-        self.name, self.islanders, self.last_login = load_game_from_db(self.db_name)
+        self.name, self.islanders, self.last_login, self.dailies_food = load_game_from_db(self.db_name)
         if self.last_login:
             print(f"last login: {self.last_login}")
         else:
@@ -273,8 +273,11 @@ class Island:
                     print("Invalid choice.")
 
     def food_mart(self):
-        print("Hey there hungry boy")
-        buy_food(self.money, self.unlocked_food)
+        print("Welcome to la food mart")
+        randomize_foods = False
+        if self.timenow.date != self.last_login.date:
+            randomize_foods = True
+        self.dailies_food = buy_food(self.money, self.unlocked_food, randomize_foods, self.dailies_food)
     
     def town_hall(self):
         print(f"Welcome to the Town Hall of {self.name}!\n"
@@ -296,7 +299,7 @@ class Island:
         print(f"{some_islander.name} is frolicking in the sand...")
     
     def fountain(self):
-        if self.timenow.date() != self.last_login.date():
+        if self.timenow.date != self.last_login.date:
             self.fountain_visited = True
         print("Collecting island donations...")
         totaldonations = 0

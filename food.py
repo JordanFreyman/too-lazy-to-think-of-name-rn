@@ -35,10 +35,17 @@ def generate_random(food_items):
     return random.sample(food_items, 5)
 
 
-def buy_food(money, current_food):
+def buy_food(money, current_food, randomize, dailies_strings):
     bought_food = {}
     selection = load_food_items("food.json")
-    dailies = generate_random(selection)
+    selection_strings = []
+    for i in selection:
+        selection_strings.append(i.name)
+    if randomize:
+        dailies = generate_random(selection)
+    for i in dailies:
+        dailies_strings.append(i.name)
+    
     print("(1) Daily Specials, or (2) In Stock?\n(3) Exit\n")
     try:
         choice = int(input("Make a selection: "))
@@ -72,7 +79,7 @@ def buy_food(money, current_food):
             else:
                 current_food.update(bought_food)
                 print("See yuh again soon")
-                return
+                return dailies_strings
         else:
             print("Invalid input.")
     except ValueError:
