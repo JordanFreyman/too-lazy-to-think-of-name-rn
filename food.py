@@ -35,8 +35,8 @@ def generate_random(food_items):
     return random.sample(food_items, 5)
 
 
-def buy_food():
-    bought_food = []
+def buy_food(money, current_food):
+    bought_food = {}
     selection = load_food_items("food.json")
     dailies = generate_random(selection)
     print("(1) Daily Specials, or (2) In Stock?\n(3) Exit\n")
@@ -44,6 +44,7 @@ def buy_food():
         choice = int(input("Make a selection: "))
         if 1 <= choice <= 3:
             if choice == 1:
+                print(f"Your money: ${money}")
                 count = 0
                 for i in dailies:
                     count += 1
@@ -52,10 +53,11 @@ def buy_food():
                 quantity = int(input("Cuanto? "))
                 if 1 <= food_choice <= len(dailies):
                     print(f"you bought {quantity} {dailies[food_choice-1].name}")
-                    # bought_food.append(dailies[food_choice-1])
+                    bought_food[dailies[food_choice-1]] = quantity
                 else:
                     print("wrong")
             elif choice == 2:
+                print(f"Your money: ${money}")
                 count = 0
                 for i in selection:
                     count += 1
@@ -64,10 +66,11 @@ def buy_food():
                 quantity = int(input("Cuanto? "))
                 if 1 <= food_choice <= len(selection):
                     print(f"you bought {quantity} {selection[food_choice-1].name}")
-                    # bought_food.append(selection[food_choice-1])
+                    bought_food[dailies[food_choice-1]] = quantity
                 else:
                     print("wrong")
             else:
+                current_food.update(bought_food)
                 print("See yuh again soon")
                 return
         else:

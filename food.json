@@ -33,6 +33,11 @@
         "name": "Cupcake",
         "price": 1,
         "description": "Oh, won't you be just a little bad and indulge?"
+      },
+      {
+        "name": "Fairy Bread",
+        "price": 2,
+        "description": "Bread of the fae. Definitely NOT just bread with butter and sprinkles."
       }
     ],
     "Beverage": [
