@@ -21,6 +21,7 @@ class Island:
         self.last_login = None  # Use None if no value is available
         self.money = 0
         self.unlocked_food = []
+        self.food_inventory = {}
         self._initialize_db()
         self.locations = ["Apartments", "Town Hall", "Fountain", "Food Mart", "Clothing Shop", "Hat Shop", "Interior Shop", "Compatibility Tester", "Beach", "Tower",
                           "Rankings Board", "Mii News", "Concert Hall", "Pawn Shop", "Photo Studio", "Amusement Park", "Park", "Cafe", "Homes"]
@@ -302,7 +303,8 @@ class Island:
 
     def food_mart(self):
         print("Hey there hungry boy")
-        self.money = buy_food(self.money, self.unlocked_food, self.dailies_food)
+        self.money, self.food_inventory = buy_food(self.money, self.food_inventory, self.dailies_food)
+        #implement unlocked food
     
     def town_hall(self):
         print(f"Welcome to the Town Hall of {self.name}!\n"

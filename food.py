@@ -60,7 +60,7 @@ def buy_food(money, current_food, dailies_list):
                         if quantity >= 0:
                             if money >= (dailies[food_choice-1].price) * quantity:
                                 print(f"you bought {quantity} {dailies[food_choice-1].name} :J")
-                                bought_food[dailies[food_choice-1]] = quantity
+                                bought_food[dailies[food_choice-1].name] = quantity
                                 money -=  (dailies[food_choice-1].price) * quantity
                             else:
                                 print("haha. POOR. no way am i letting you buy this...")
@@ -79,16 +79,18 @@ def buy_food(money, current_food, dailies_list):
                         quantity = int(input("Cuanto? "))
                         if quantity >= 0:
                             print(f"you bought {quantity} {selection[food_choice-1].name}")
-                            bought_food[selection[food_choice-1]] = quantity
+                            bought_food[selection[food_choice-1].name] = quantity
                         else:
                             print("what. what")
                     else:
                         print("wrong")
                 else:
                     # current_food.update(bought_food)
-                    print(current_food)
+                    for food, quant in bought_food.items():
+                        current_food[food] = current_food.get(food, 0) + quant
+                    print(f"current food inventory: {current_food}")
                     print("See yuh again soon")
-                    return money
+                    return money, current_food
             else:
                 print("Invalid input.")
         except ValueError:
