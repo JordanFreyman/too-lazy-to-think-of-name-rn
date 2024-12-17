@@ -78,8 +78,12 @@ def buy_food(money, current_food, dailies_list):
                     if 1 <= food_choice <= len(selection):
                         quantity = int(input("Cuanto? "))
                         if quantity >= 0:
-                            print(f"you bought {quantity} {selection[food_choice-1].name}")
-                            bought_food[selection[food_choice-1].name] = quantity
+                            if money >= (selection[food_choice-1].price) * quantity:
+                                print(f"you bought {quantity} {selection[food_choice-1].name}")
+                                bought_food[selection[food_choice-1].name] = quantity
+                                money -= (selection[food_choice-1].price) * quantity
+                            else:
+                                print("haha. POOR. no way am i letting you buy this...")
                         else:
                             print("what. what")
                     else:
