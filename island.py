@@ -114,6 +114,7 @@ class Island:
         #     print(f"Today's food list: {', '.join(self.dailies_food)}")
         # else:
         #     print("No daily food list recorded.")
+        # print(self.food_inventory)
         for i in self.islanders:
             self.reset_sleeping_status(i)
 
@@ -304,6 +305,9 @@ class Island:
     def food_mart(self):
         print("Hey there hungry boy")
         self.money, self.food_inventory = buy_food(self.money, self.food_inventory, self.dailies_food)
+        for i in self.food_inventory.keys():
+            if i not in self.unlocked_food:
+                self.unlocked_food.append(i)
         #implement unlocked food
     
     def town_hall(self):
@@ -316,7 +320,9 @@ class Island:
             for i in self.islanders:
                 print(f"{i.name} - {i.gender}\nAge {i.age}\t{i.height} inches tall")
         elif choice == 3:
-            print("wip")
+            print("hey, here's all the food you've collected!")
+            for i in self.unlocked_food:
+                print(i)
         elif choice == 4:
             print("wip")
             #settings page includes clock settings, change island name, and delete save data.
