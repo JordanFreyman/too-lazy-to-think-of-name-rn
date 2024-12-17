@@ -19,6 +19,11 @@
         "name": "Italian Wedding Soup",
         "price": 6,
         "description": "Mazel tov."
+      },
+      {
+        "name": "Pizza",
+        "price": 4,
+        "description": "A steamy, fresh slice of THIN-CRUSTED pizza. The most superior type of crust. Only the best for you."
       }
     ],
     "Side Dish": [
@@ -26,6 +31,11 @@
         "name": "Garlic Bread",
         "price": 3,
         "description": "Olive Garden wishes they could top this."
+      },
+      {
+        "name": "French Fries",
+        "price": 3,
+        "description": "Wouldn't it make more sense for these to be called 'crisps' in British? Y'know cause they're so crispy"
       }
     ],
     "Dessert": [
@@ -55,6 +65,11 @@
         "name": "Milk",
         "price": 1,
         "description": "Keep away from the legendary Puss in Boots at all times."
+      },
+      {
+        "name": "Coffee",
+        "price": 2,
+        "description": "Breakfast and the morning newspaper awaits."
       }
     ]
   }
