@@ -75,16 +75,16 @@ class Island:
 
         # Convert dailies_food to a comma-separated string
         dailies_food_str = ','.join(self.dailies_food) if self.dailies_food else ''
-
-        save_game_to_db(self.name, self.islanders, dailies_food_str, self.money, self.db_name)
+        food_inventory_str = json.dumps(self.food_inventory)
+        save_game_to_db(self.name, self.islanders, dailies_food_str, self.money, food_inventory_str, self.db_name)
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
         
         cursor.execute('''
             UPDATE island
-            SET last_login = ?, dailies_food = ?, money = ?
+            SET last_login = ?, dailies_food = ?, money = ?, food_inventory = ?
             WHERE name = ?
-        ''', (self.last_login, dailies_food_str, self.money, self.name))
+        ''', (self.last_login, dailies_food_str, self.money, food_inventory_str, self.name))
 
         conn.commit()
         conn.close()
@@ -93,7 +93,7 @@ class Island:
     
     def load_game(self, save_file):
         """Load the game state."""
-        self.name, self.islanders, self.dailies_food, self.last_login, self.money = load_game_from_db(self.db_name)
+        self.name, self.islanders, self.dailies_food, self.last_login, self.money, self.food_inventory = load_game_from_db(self.db_name)
         if self.last_login:
             print(f"last login: {self.last_login}")
         else:
