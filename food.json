@@ -24,6 +24,16 @@
         "name": "Pizza",
         "price": 4,
         "description": "A steamy, fresh slice of THIN-CRUSTED pizza. The most superior type of crust. Only the best for you."
+      },
+      {
+        "name": "Udon",
+        "price": 5,
+        "description": "Udon't even wanna imagine a life without this."
+      },
+      {
+        "name": "Roasted Turkey",
+        "price": 8,
+        "description": "Never be afraid of a little food coma."
       }
     ],
     "Side Dish": [
@@ -36,6 +46,21 @@
         "name": "French Fries",
         "price": 3,
         "description": "Wouldn't it make more sense for these to be called 'crisps' in British? Y'know cause they're so crispy"
+      },
+      {
+        "name": "Whole Tomato",
+        "price": 1,
+        "description": "Apple if you're not a coward."
+      },
+      {
+        "name": "Beef Jerky",
+        "price": 3,
+        "description": "This meat will cure you in one bite."
+      },
+      {
+        "name": "Trail Mix",
+        "price": 3,
+        "description": "Don't keep your eyes off of these for even a second with me around 'cause those chocolate candies will disappear if you do."
       }
     ],
     "Dessert": [
@@ -70,6 +95,11 @@
         "name": "Coffee",
         "price": 2,
         "description": "Breakfast and the morning newspaper awaits."
+      },
+      {
+        "name": "Boba Tea",
+        "price": 4,
+        "description": "Whoever gets their hands on this and loves it is really fruity..."
       }
     ]
   }
