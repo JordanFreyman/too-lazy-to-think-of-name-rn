@@ -19,7 +19,7 @@ class Island:
         self.saved = False
         self.name = ""
         self.last_login = None  # Use None if no value is available
-        self.money = 0.0
+        self.money = 0
         self.unlocked_food = {}
         self.all_food = []
         self._initialize_db()
@@ -76,15 +76,15 @@ class Island:
         # Convert dailies_food to a comma-separated string
         dailies_food_str = ','.join(self.dailies_food) if self.dailies_food else ''
 
-        save_game_to_db(self.name, self.islanders, dailies_food_str, self.db_name)  # Use utility function
+        save_game_to_db(self.name, self.islanders, dailies_food_str, self.money, self.db_name)
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
         
         cursor.execute('''
             UPDATE island
-            SET last_login = ?, dailies_food = ?
+            SET last_login = ?, dailies_food = ?, money = ?
             WHERE name = ?
-        ''', (self.last_login, dailies_food_str ,self.name))
+        ''', (self.last_login, dailies_food_str, self.money, self.name))
 
         conn.commit()
         conn.close()
@@ -93,7 +93,7 @@ class Island:
     
     def load_game(self, save_file):
         """Load the game state."""
-        self.name, self.islanders, self.dailies_food, self.last_login = load_game_from_db(self.db_name)
+        self.name, self.islanders, self.dailies_food, self.last_login, self.money = load_game_from_db(self.db_name)
         if self.last_login:
             print(f"last login: {self.last_login}")
         else:
@@ -110,10 +110,10 @@ class Island:
         if self.generate_new_food_dailies:
             self.dailies_food = random.sample(self.food_list, 5)
         #DEBUG!!!!!!!!!!!!!!!!!
-        if self.dailies_food:
-            print(f"Today's food list: {', '.join(self.dailies_food)}")
-        else:
-            print("No daily food list recorded.")
+        # if self.dailies_food:
+        #     print(f"Today's food list: {', '.join(self.dailies_food)}")
+        # else:
+        #     print("No daily food list recorded.")
         for i in self.islanders:
             self.reset_sleeping_status(i)
 
@@ -150,13 +150,13 @@ class Island:
         # bdtime = datetime.datetime.strptime(str(islander.bedtime), "%H:%M:%S")
         #set new waketime
         if self.timenow.hour >= 12 and self.timenow.minute >= 0 and self.last_login and self.timenow.date() != self.last_login.date():
-            print(f"set new waketime for {islander.name}")
+            # print(f"set new waketime for {islander.name}")
             # islander.randomize_sleeping_tonight()
             islander.set_waketime()
 
         #set new bedtime
         if self.timenow.hour < 20 and self.timenow.hour > 6 and self.last_login and self.timenow.date() != self.last_login.date():
-            print(f"set new bedtime for {islander.name}")
+            # print(f"set new bedtime for {islander.name}")
             islander.set_bedtime()
             islander.randomize_sleeping_tonight()
             
@@ -187,6 +187,7 @@ class Island:
         """Main menu for interacting with the island."""
 
         print("Where would you like to go?\n")
+        print(f"Current money: ${self.money}")
         for idx, location in enumerate(self.unlocked_locations, start=1):
             print(f"{idx}) {location}")
         print(f"{len(self.unlocked_locations)+1}) Save game\n"
@@ -206,7 +207,9 @@ class Island:
                 elif selected_location == "Fountain":
                     if self.timenow.date() != self.last_login.date():
                         self.fountain_visited = False
-                    self.fountain()
+                    else:
+                        self.fountain_visited = True
+                    self.fountain(self.fountain_visited)
                 
             elif choice == len(self.unlocked_locations) + 1:    #save game
                 self.save_game(save_file)
@@ -321,17 +324,18 @@ class Island:
         some_islander = random.choice(self.islanders)
         print(f"{some_islander.name} is frolicking in the sand...")
     
-    def fountain(self):
-        if self.timenow.date() != self.last_login.date():
-            self.fountain_visited = True
-        print("Collecting island donations...")
-        totaldonations = 0
-        for i in self.islanders:
-            donation = random.randint(1,5)
-            print(f"{i.name} donated ${donation}!")
-            totaldonations += donation
-        print(f"${totaldonations} collected today")
-        self.money += totaldonations
+    def fountain(self, already_visited_today):
+        if already_visited_today:
+            print("Hey! Sup bb...")
+        else:
+            print("Collecting island donations...")
+            totaldonations = 0
+            for i in self.islanders:
+                donation = random.randint(1,5)
+                print(f"{i.name} donated ${donation}!")
+                totaldonations += donation
+            print(f"${totaldonations} collected today")
+            self.money += totaldonations
 
     def inside_apt(self, islander):
         """Enter an islander's apartment."""
