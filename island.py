@@ -321,6 +321,9 @@ class Island:
                 print(f"{i.name} - {i.gender}\nAge {i.age}\t{i.height} inches tall")
         elif choice == 3:
             print("hey, here's all the food you've collected!")
+            for i in self.food_inventory.keys():
+                if i not in self.unlocked_food:
+                    self.unlocked_food.append(i)
             for i in self.unlocked_food:
                 print(i)
         elif choice == 4:
