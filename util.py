@@ -4,18 +4,23 @@ from islander import Islander
 import datetime, random
 
 def ensure_last_login_column(db_name):
-    """Ensure the last_login column exists in the island table."""
+    """Ensure the last_login and money columns exist in the island table."""
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
 
-    # Check if 'last_login' column exists
+    # Check if 'last_login' and 'money' columns exist
     cursor.execute("PRAGMA table_info(island);")
     columns = [col[1] for col in cursor.fetchall()]
+
     if "last_login" not in columns:
         cursor.execute("ALTER TABLE island ADD COLUMN last_login TEXT")
-        conn.commit()
+    
+    if "money" not in columns:
+        cursor.execute("ALTER TABLE island ADD COLUMN money INTEGER DEFAULT 0")  # Default to 0
 
+    conn.commit()
     conn.close()
+
 
 def dailies_food_column(db_name="island_game.db"):
     """Ensure the dailies_food column exists in the island table."""
@@ -35,7 +40,7 @@ def dailies_food_column(db_name="island_game.db"):
 
 
 
-def save_game_to_db(island, islanders, dailies_food, db_name="island_game.db"):
+def save_game_to_db(island, islanders, dailies_food, money, db_name="island_game.db"):
     """Save the current state of the game to the SQLite database."""
     ensure_last_login_column(db_name)
     dailies_food_column(db_name)
@@ -70,8 +75,11 @@ def save_game_to_db(island, islanders, dailies_food, db_name="island_game.db"):
     )''')
 
     # Save island details
-    cursor.execute('INSERT OR REPLACE INTO island (name, last_login, dailies_food) VALUES (?, ?, ?)', 
-                   (island, datetime.datetime.now().isoformat(), ','.join(dailies_food)))
+    cursor.execute('''
+        INSERT OR REPLACE INTO island (name, last_login, dailies_food, money)
+        VALUES (?, ?, ?, ?)
+    ''', (island, datetime.datetime.now().isoformat(), ','.join(dailies_food), money))
+
     # cursor.execute("UPDATE island SET last_login = ? WHERE last_login IS NULL", (datetime.datetime.now().isoformat(),))
 
     # Save islanders
@@ -113,6 +121,9 @@ def load_game_from_db(db_name="island_game.db"):
     island_name = ""
     last_login = None  # Use None if no value is available
     dailies_food = []
+    money = 0
+    ensure_last_login_column(db_name)
+    # print_table_schema(db_name)
     try:
         conn = sqlite3.connect(db_name)
         cursor = conn.cursor()
@@ -130,14 +141,16 @@ def load_game_from_db(db_name="island_game.db"):
         #     else:
                 # dailies_food = []  # If not, assign an empty list
 
-            # Fetch the island details
-        cursor.execute('SELECT name, last_login, dailies_food FROM island LIMIT 1')
+        cursor.execute('SELECT name, last_login, dailies_food, money FROM island LIMIT 1')
         row = cursor.fetchone()
 
         if row:
-            island_name, last_login_str, dailies_food_str = row
+            island_name, last_login_str, dailies_food_str, money = row
             last_login = datetime.datetime.fromisoformat(last_login_str) if last_login_str else None
             dailies_food = dailies_food_str.split(',') if dailies_food_str else []
+        else:
+            money = 0  # Default value if no record exists
+
 
         # Fetch all islanders
         cursor.execute('SELECT * FROM islanders')
@@ -195,7 +208,7 @@ def load_game_from_db(db_name="island_game.db"):
         conn.close()
     except sqlite3.Error as e:
         print(f"Error loading game: {e}")
-    return island_name, islanders, dailies_food, last_login
+    return island_name, islanders, dailies_food, last_login, money
 
 
 
@@ -290,6 +303,7 @@ def print_table_schema(db_name="island_game.db"):
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
     cursor.execute("PRAGMA table_info(islanders);")
+    cursor.execute("PRAGMA table_info(island);")
     schema = cursor.fetchall()
     conn.close()
     print(schema)
