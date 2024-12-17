@@ -19,13 +19,16 @@ class Island:
         self.saved = False
         self.name = ""
         self.last_login = None  # Use None if no value is available
-        self.money = 0.0
-        self.unlocked_food = {}
+        self.money = 0
+        self.unlocked_food = []
         self.all_food = []
         self._initialize_db()
         self.locations = ["Apartments", "Town Hall", "Fountain", "Food Mart", "Clothing Shop", "Hat Shop", "Interior Shop", "Compatibility Tester", "Beach", "Tower",
                           "Rankings Board", "Mii News", "Concert Hall", "Pawn Shop", "Photo Studio", "Amusement Park", "Park", "Cafe", "Homes"]
         self.unlocked_locations = ["Apartments", "Food Mart", "Town Hall", "Beach", "Fountain"]
+
+        self.food_inventory = {}
+        self.clothing_inventory = {} #add to this later
 
         self.food_list = []
         with open("food.json", "r") as file:
@@ -71,20 +74,20 @@ class Island:
     
     def save_game(self, save_file):
         """Save the current state of the game."""
-        self.last_login = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+        # self.last_login = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.last_login = self.timenow
         # Convert dailies_food to a comma-separated string
         dailies_food_str = ','.join(self.dailies_food) if self.dailies_food else ''
 
-        save_game_to_db(self.name, self.islanders, dailies_food_str, self.db_name)  # Use utility function
+        save_game_to_db(self.name, self.islanders, dailies_food_str, self.money, self.db_name)  # Use utility function
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
         
         cursor.execute('''
             UPDATE island
-            SET last_login = ?, dailies_food = ?
+            SET last_login = ?, dailies_food = ?, money = ?
             WHERE name = ?
-        ''', (self.last_login, dailies_food_str ,self.name))
+        ''', (self.last_login, dailies_food_str , self.money, self.name))
 
         conn.commit()
         conn.close()
@@ -93,12 +96,12 @@ class Island:
     
     def load_game(self, save_file):
         """Load the game state."""
-        self.name, self.islanders, self.dailies_food, self.last_login = load_game_from_db(self.db_name)
+        self.name, self.islanders, self.dailies_food, self.last_login, self.money = load_game_from_db(self.db_name)
         if self.last_login:
             print(f"last login: {self.last_login}")
         else:
             print("No previous login time recorded.")
-
+        
         if self.timenow.date() != self.last_login.date():
             #Generate new dailies food list
             # print(f"timenow: {type(self.timenow.date())} , last_login: {type(self.last_login.date())}")
