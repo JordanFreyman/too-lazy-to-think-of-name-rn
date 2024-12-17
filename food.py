@@ -18,27 +18,30 @@ def load_food_items(json_filename="food.json"):
                 food_items.append(food_item)
     return food_items
 
-# def generate_random(food_items, num_items=5):
-#     return random.sample(food_items, num_items)
-
-# def generate_random(food_items):
-#     selected_items = []
-#     while len(selected_items) < 5:
-#         rand = random.randint(0, len(food_items) - 1)  # Ensure the index is in range
-#         if food_items[rand] not in selected_items:
-#             selected_items.append(food_items[rand])
-#     return selected_items
-
 def generate_random(food_items):
     if len(food_items) < 5:
         raise ValueError("Not enough food items to generate a selection. At least 5 items are required.")
     return random.sample(food_items, 5)
 
 
-def buy_food(money, current_food):
+def buy_food(money, current_food, dailies_list):
     bought_food = {}
     selection = load_food_items("food.json")
-    dailies = generate_random(selection)
+    # dailies = []
+    # if gen_new_food:
+    #     dailies = generate_random(selection)
+    #     for i in dailies:
+    #         dailies_list.append(i.name)
+    # else:
+    #     for i in selection:
+    #         if i.name in dailies_list:
+    #             dailies.append(i)
+    #     dailies = random.shuffle(dailies) #Fix later so it doesn't shuffle every time
+    
+    dailies = [food for food in selection if food.name in dailies_list]
+    for i in dailies:
+        print(i.name)
+
     print("(1) Daily Specials, or (2) In Stock?\n(3) Exit\n")
     try:
         choice = int(input("Make a selection: "))

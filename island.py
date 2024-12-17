@@ -1,4 +1,4 @@
-import sqlite3
+import sqlite3, json
 from islander import Islander
 from util import *
 from food import buy_food
@@ -11,9 +11,9 @@ class Island:
         self.local_time = time.ctime(self.seconds)
         self.timenow = datetime.datetime.now()  # Full datetime object
         # self.timenow = datetime.datetime(2024, 12, 11, hour=10,minute=30,second=0) #debugging for bedtime testing
-
+        self.generate_new_food_dailies = False
         self.fountain_visited = False
-
+        self.dailies_food = []
         self.db_name = db_name
         self.islanders = []
         self.saved = False
@@ -26,6 +26,13 @@ class Island:
         self.locations = ["Apartments", "Town Hall", "Fountain", "Food Mart", "Clothing Shop", "Hat Shop", "Interior Shop", "Compatibility Tester", "Beach", "Tower",
                           "Rankings Board", "Mii News", "Concert Hall", "Pawn Shop", "Photo Studio", "Amusement Park", "Park", "Cafe", "Homes"]
         self.unlocked_locations = ["Apartments", "Food Mart", "Town Hall", "Beach", "Fountain"]
+
+        self.food_list = []
+        with open("food.json", "r") as file:
+            data = json.load(file)
+            for i, j in data.items():
+                for k in j:
+                    self.food_list.append(k["name"])
 
         for islander in self.islanders:
             save_islander_sleeping_status(islander)
@@ -61,22 +68,24 @@ class Island:
         conn.commit()
         conn.close()
         add_columns_if_not_exist(self.db_name)
+    
     def save_game(self, save_file):
         """Save the current state of the game."""
         self.last_login = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        save_game_to_db(self.name, self.islanders, self.db_name)  # Use utility function
+        # Convert dailies_food to a comma-separated string
+        dailies_food_str = ','.join(self.dailies_food) if self.dailies_food else ''
 
+        save_game_to_db(self.name, self.islanders, dailies_food_str, self.db_name)  # Use utility function
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
         
-        # Update the island table with the last_login value
         cursor.execute('''
             UPDATE island
-            SET last_login = ?
+            SET last_login = ?, dailies_food = ?
             WHERE name = ?
-        ''', (self.last_login, self.name))
-        
+        ''', (self.last_login, dailies_food_str ,self.name))
+
         conn.commit()
         conn.close()
         self.saved = True
@@ -84,12 +93,27 @@ class Island:
     
     def load_game(self, save_file):
         """Load the game state."""
-        self.name, self.islanders, self.last_login = load_game_from_db(self.db_name)
+        self.name, self.islanders, self.dailies_food, self.last_login = load_game_from_db(self.db_name)
         if self.last_login:
             print(f"last login: {self.last_login}")
         else:
             print("No previous login time recorded.")
-        
+
+        if self.timenow.date() != self.last_login.date():
+            #Generate new dailies food list
+            # print(f"timenow: {type(self.timenow.date())} , last_login: {type(self.last_login.date())}")
+            # print(f"{self.timenow.strftime('%Y-%m-%d')} and {self.last_login.strftime('%Y-%m-%d')}")
+
+            self.generate_new_food_dailies = True
+        else:
+            self.generate_new_food_dailies = False
+        if self.generate_new_food_dailies:
+            self.dailies_food = random.sample(self.food_list, 5)
+        #DEBUG!!!!!!!!!!!!!!!!!
+        if self.dailies_food:
+            print(f"Today's food list: {', '.join(self.dailies_food)}")
+        else:
+            print("No daily food list recorded.")
         for i in self.islanders:
             self.reset_sleeping_status(i)
 
@@ -188,6 +212,8 @@ class Island:
                 self.save_game(save_file)
             elif choice == len(self.unlocked_locations) + 2:    #exit game
                 if self.last_login:
+                    if isinstance(self.last_login, str):
+                        self.last_login = datetime.datetime.strptime(self.last_login, "%Y-%m-%d %H:%M:%S")
                     time_diff = self.timenow - self.last_login
                     # print(f"time difference since last save is : {time_diff}\nsaved = {self.saved}")
                     if time_diff >= datetime.timedelta(minutes=10):
@@ -274,7 +300,7 @@ class Island:
 
     def food_mart(self):
         print("Hey there hungry boy")
-        buy_food(self.money, self.unlocked_food)
+        buy_food(self.money, self.unlocked_food, self.dailies_food)
     
     def town_hall(self):
         print(f"Welcome to the Town Hall of {self.name}!\n"
