@@ -41,42 +41,55 @@ def buy_food(money, current_food, dailies_list):
     dailies = [food for food in selection if food.name in dailies_list]
     for i in dailies:
         print(i.name)
-
-    print("(1) Daily Specials, or (2) In Stock?\n(3) Exit\n")
-    try:
-        choice = int(input("Make a selection: "))
-        if 1 <= choice <= 3:
-            if choice == 1:
-                print(f"Your money: ${money}")
-                count = 0
-                for i in dailies:
-                    count += 1
-                    print(f"{count}) {i.name} - ${i.price}\n{i.description}\n")
-                food_choice = int(input("Select a food: "))
-                quantity = int(input("Cuanto? "))
-                if 1 <= food_choice <= len(dailies):
-                    print(f"you bought {quantity} {dailies[food_choice-1].name}")
-                    bought_food[dailies[food_choice-1]] = quantity
+    choice = 0
+    while choice != 3:
+        print(f"Your money: ${money}")
+        print("(1) Daily Specials, or (2) In Stock?\n(3) Exit\n")
+        try:
+            choice = int(input("Make a selection: "))
+            if 1 <= choice <= 3:
+                if choice == 1:
+                    print(f"Your money: ${money}")
+                    count = 0
+                    for i in dailies:
+                        count += 1
+                        print(f"{count}) {i.name} - ${i.price}\n{i.description}\n")
+                    food_choice = int(input("Select a food: "))
+                    if 1 <= food_choice <= len(dailies):
+                        quantity = int(input("Cuanto? "))
+                        if quantity >= 0:
+                            if money >= (dailies[food_choice-1].price) * quantity:
+                                print(f"you bought {quantity} {dailies[food_choice-1].name} :J")
+                                bought_food[dailies[food_choice-1]] = quantity
+                                money -=  (dailies[food_choice-1].price) * quantity
+                            else:
+                                print("haha. POOR. no way am i letting you buy this...")
+                        else:
+                            print("what. what")
+                    else:
+                        print("ooh so close try again")
+                elif choice == 2:
+                    print(f"Your money: ${money}")
+                    count = 0
+                    for i in selection:
+                        count += 1
+                        print(f"{count}) {i.name} - ${i.price}\n{i.description}\n")
+                    food_choice = int(input("Select a food: "))
+                    if 1 <= food_choice <= len(selection):
+                        quantity = int(input("Cuanto? "))
+                        if quantity >= 0:
+                            print(f"you bought {quantity} {selection[food_choice-1].name}")
+                            bought_food[selection[food_choice-1]] = quantity
+                        else:
+                            print("what. what")
+                    else:
+                        print("wrong")
                 else:
-                    print("wrong")
-            elif choice == 2:
-                print(f"Your money: ${money}")
-                count = 0
-                for i in selection:
-                    count += 1
-                    print(f"{count}) {i.name} - ${i.price}\n{i.description}\n")
-                food_choice = int(input("Select a food: "))
-                quantity = int(input("Cuanto? "))
-                if 1 <= food_choice <= len(selection):
-                    print(f"you bought {quantity} {selection[food_choice-1].name}")
-                    bought_food[dailies[food_choice-1]] = quantity
-                else:
-                    print("wrong")
+                    # current_food.update(bought_food)
+                    print(current_food)
+                    print("See yuh again soon")
+                    return money
             else:
-                current_food.update(bought_food)
-                print("See yuh again soon")
-                return
-        else:
-            print("Invalid input.")
-    except ValueError:
-        print("Invalid input. Please enter a number.")
+                print("Invalid input.")
+        except ValueError:
+            print("Invalid input. Please enter a number.")
