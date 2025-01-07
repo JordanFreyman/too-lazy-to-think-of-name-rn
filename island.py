@@ -206,10 +206,6 @@ class Island:
                 elif selected_location == "Beach":
                     self.beach()
                 elif selected_location == "Fountain":
-                    if self.timenow.date() != self.last_login.date():
-                        self.fountain_visited = False
-                    else:
-                        self.fountain_visited = True
                     self.fountain(self.fountain_visited)
                 
             elif choice == len(self.unlocked_locations) + 1:    #save game
@@ -346,6 +342,7 @@ class Island:
                 totaldonations += donation
             print(f"${totaldonations} collected today")
             self.money += totaldonations
+            self.fountain_visited = True
 
     def inside_apt(self, islander):
         """Enter an islander's apartment."""
