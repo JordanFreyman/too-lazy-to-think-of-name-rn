@@ -1,4 +1,4 @@
-import datetime, time, random
+import datetime, time, random, pickle
 class Islander:
     def __init__(self, name, aptNum, gender, age, height, hair=None, eyes=None, voice=None, sleeping_tonight=True):
         self.name = name
@@ -16,7 +16,8 @@ class Islander:
         self.set_waketime()
         self.set_bedtime()
 
-        self.relationships = []
+        self.relationships = {}
+        self.partner = {}
 
     def set_waketime(self):
         start_seconds = 6 * 3600 + 30 * 60  # 6:30 AM in seconds
@@ -35,3 +36,9 @@ class Islander:
         chances = random.randint(0, 4)
         if chances == 4:
             self.sleeping_tonight = False
+
+    def save_relationships(self):
+        """use pickle to save self.relationships dict"""
+    
+    def load_relationships(self):
+        """use pickle to load self.relationships dict"""
